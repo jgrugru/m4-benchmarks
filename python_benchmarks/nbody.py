@@ -58,7 +58,7 @@ def advance(dt, bodies, pairs):
         v2[0] += dx * m1 * mag
         v2[1] += dy * m1 * mag
         v2[2] += dz * m1 * mag
-    for r, [vx, vy, vz], m in bodies:
+    for r, [vx, vy, vz], _m in bodies:
         r[0] += dt * vx
         r[1] += dt * vy
         r[2] += dt * vz
@@ -66,11 +66,11 @@ def advance(dt, bodies, pairs):
 
 def offset_momentum(ref, bodies):
     px = py = pz = 0.0
-    for r, [vx, vy, vz], m in bodies:
+    for _r, [vx, vy, vz], m in bodies:
         px -= vx * m
         py -= vy * m
         pz -= vz * m
-    r, v, m = ref
+    _r, v, m = ref
     v[0] = px / m
     v[1] = py / m
     v[2] = pz / m
@@ -88,11 +88,7 @@ def run() -> None:
             BODIES["neptune"],
         )
     ]
-    pairs = [
-        (bodies[i], bodies[j])
-        for i in range(len(bodies))
-        for j in range(i + 1, len(bodies))
-    ]
+    pairs = [(bodies[i], bodies[j]) for i in range(len(bodies)) for j in range(i + 1, len(bodies))]
     offset_momentum(bodies[0], bodies)
     for _ in range(N_STEPS):
         advance(0.01, bodies, pairs)

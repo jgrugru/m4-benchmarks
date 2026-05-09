@@ -13,7 +13,7 @@ def run() -> None:
             cx = (px / WIDTH) * 3.5 - 2.5
             x = 0.0
             y = 0.0
-            for i in range(MAX_ITER):
+            for _i in range(MAX_ITER):
                 x2 = x * x
                 y2 = y * y
                 if x2 + y2 > 4.0:

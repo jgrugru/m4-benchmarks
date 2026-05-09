@@ -76,9 +76,7 @@ def main() -> None:
     ax.set_yticklabels(rel.index, fontsize=7)
     for i in range(rel.shape[0]):
         for j in range(rel.shape[1]):
-            ax.text(
-                j, i, f"{rel.values[i, j]:.2f}", ha="center", va="center", fontsize=6
-            )
+            ax.text(j, i, f"{rel.values[i, j]:.2f}", ha="center", va="center", fontsize=6)
     ax.set_title("pyperformance: relative runtime (1.00 = fastest version)")
     fig.colorbar(im, ax=ax, label="x slower than fastest")
     fig.tight_layout()

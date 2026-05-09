@@ -62,9 +62,7 @@ CATEGORY_ORDER = ["single-core", "multi-core", "native-BLAS"]
 
 
 def _info(bench: str) -> dict[str, str]:
-    return BENCH_INFO.get(
-        bench, {"category": "unknown", "axis": "unknown", "desc": "(no metadata)"}
-    )
+    return BENCH_INFO.get(bench, {"category": "unknown", "axis": "unknown", "desc": "(no metadata)"})
 
 
 def plot_per_benchmark(agg: pd.DataFrame) -> None:
@@ -107,9 +105,7 @@ def plot_heatmap(agg: pd.DataFrame) -> None:
     order = sorted(
         pivot.index,
         key=lambda b: (
-            CATEGORY_ORDER.index(_info(b)["category"])
-            if _info(b)["category"] in CATEGORY_ORDER
-            else 99,
+            CATEGORY_ORDER.index(_info(b)["category"]) if _info(b)["category"] in CATEGORY_ORDER else 99,
             b,
         ),
     )
@@ -125,9 +121,7 @@ def plot_heatmap(agg: pd.DataFrame) -> None:
     ax.set_yticklabels(labels, fontsize=8)
     for i in range(rel.shape[0]):
         for j in range(rel.shape[1]):
-            ax.text(
-                j, i, f"{rel.values[i, j]:.2f}x", ha="center", va="center", fontsize=8
-            )
+            ax.text(j, i, f"{rel.values[i, j]:.2f}x", ha="center", va="center", fontsize=8)
     ax.set_title("Relative runtime per benchmark (1.00 = fastest version)")
     fig.colorbar(im, ax=ax, label="x slower than fastest")
     fig.tight_layout()
@@ -141,11 +135,7 @@ def plot_category_overview(agg: pd.DataFrame) -> None:
     df["category"] = df["benchmark"].map(lambda b: _info(b)["category"])
     df = df.sort_values(
         ["category", "benchmark", "python_version"],
-        key=lambda s: (
-            s.map(lambda v: CATEGORY_ORDER.index(v) if v in CATEGORY_ORDER else 99)
-            if s.name == "category"
-            else s
-        ),
+        key=lambda s: s.map(lambda v: CATEGORY_ORDER.index(v) if v in CATEGORY_ORDER else 99) if s.name == "category" else s,
     )
 
     versions = sorted(df["python_version"].unique())
@@ -173,15 +163,13 @@ def plot_category_overview(agg: pd.DataFrame) -> None:
     cat_for = {b: _info(b)["category"] for b in benches}
     last_cat = None
     start = 0
-    for i, b in enumerate(benches + [None]):
+    for i, b in enumerate([*benches, None]):
         cat = cat_for.get(b) if b else None
         if cat != last_cat:
             if last_cat is not None:
                 mid = (start + i - 1) / 2
                 color = CATEGORY_COLORS.get(last_cat, "#888")
-                ax.axvspan(
-                    start - 0.5, i - 0.5, ymin=0.95, ymax=1.0, color=color, alpha=0.25
-                )
+                ax.axvspan(start - 0.5, i - 0.5, ymin=0.95, ymax=1.0, color=color, alpha=0.25)
                 ax.text(
                     mid,
                     band_y,
@@ -206,9 +194,7 @@ def main() -> None:
 
     df = pd.read_csv(RESULTS_CSV)
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
-    agg = df.groupby(["benchmark", "python_version"], as_index=False)[
-        "median_s"
-    ].median()
+    agg = df.groupby(["benchmark", "python_version"], as_index=False)["median_s"].median()
 
     plot_per_benchmark(agg)
     plot_heatmap(agg)

@@ -25,7 +25,13 @@ uv venv .venv-3.14t --python 3.14t
 ./run_all.sh
 ```
 
-Loops 5 versions × 8 benchmarks. Appends rows to `results/results.csv`. Auto-plots at end.
+Loops 5 Python versions × 8 benchmarks + 8 C benchmarks. Appends rows to `results/results.csv`. Auto-plots at end.
+
+Pass `--fresh` to wipe `results/results.csv` first (default keeps history; plots take median across all runs):
+
+```bash
+./run_all.sh --fresh
+```
 
 If a prior shell exported `PYTHON_GIL=0` globally, non-`t` Pythons crash with `Disabling the GIL is not supported by this build`. Clear it before running:
 
@@ -37,7 +43,7 @@ unset PYTHON_GIL
 ## Plot only (no re-run)
 
 ```bash
-UV_PROJECT_ENVIRONMENT=.venv-3.13 uv run --python 3.13 python plot.py
+UV_PROJECT_ENVIRONMENT=.venv-3.12 uv run --python 3.12 python plot.py
 ```
 
 PNGs land in `results/plots/`:
@@ -72,18 +78,54 @@ Optional flags:
 ## Layout
 
 ```
-benchmarks/         one file per benchmark, each exposes run()
-runner.py           times one benchmark, appends CSV row
+python_benchmarks/  one file per Python benchmark, each exposes run()
+c_benchmarks/       C port of every benchmark + Makefile
+runner.py           times one benchmark (Python or C), appends CSV row
 plot.py             CSV -> PNG plots
 plot_pyperf.py      pyperf JSON -> PNG plots
-run_all.sh          loop versions x benchmarks (own suite)
+run_all.sh          loop versions x benchmarks (Python + C)
 run_pyperf.sh       loop versions x pyperformance + plot
 results/            results.csv, pyperf-*.json, plots/
 ```
 
 ## Add a benchmark
 
-Drop `benchmarks/foo.py` with a `run()` function. Add `foo` to `BENCHES` in `run_all.sh`.
+Drop `python_benchmarks/foo.py` with a `run()` function. Add `foo` to `BENCHES` in `run_all.sh`. For a C variant, drop `c_benchmarks/foo.c` defining `void run(void)` and add a build rule in `c_benchmarks/Makefile`.
+
+## C benchmarks
+
+C ports of every Python benchmark, treated as another "version" in the CSV (`python_version` = `C-clang<major>`, `python_impl` = `C`). Same workload sizes as Python. Compiled with `-O3 -mcpu=apple-m4`.
+
+Backends chosen for fair compare:
+- `pidigits` — GMP (`libgmp`) for arbitrary-precision int (matches Python int internals).
+- `matmul_numpy` — `cblas_dgemm` via Apple Accelerate (same backend numpy uses on macOS).
+- `sha256_mp` — OpenSSL EVP (same impl as Python `hashlib`), pthreads for fan-out.
+
+System deps (Homebrew):
+
+```bash
+brew install gmp openssl@3
+```
+
+Build:
+
+```bash
+make -C c_benchmarks
+```
+
+Run all C benches (called automatically by `run_all.sh`):
+
+```bash
+for b in float_ops mandelbrot nbody fannkuch pidigits prime_sieve matmul_numpy sha256_mp; do
+    uv run --python 3.12 python runner.py --lang c "$b"
+done
+```
+
+Single C bench:
+
+```bash
+uv run --python 3.12 python runner.py --lang c mandelbrot
+```
 
 ## Pyperformance (full official suite)
 
@@ -103,20 +145,19 @@ Some pyperformance benches may skip on `3.14t` if a C extension lacks a free-thr
 Plot only (after JSONs exist):
 
 ```bash
-UV_PROJECT_ENVIRONMENT=.venv-3.13 uv run --python 3.13 python plot_pyperf.py
+UV_PROJECT_ENVIRONMENT=.venv-3.12 uv run --python 3.12 python plot_pyperf.py
 ```
 
 Single version manual:
 
 ```bash
-UV_PROJECT_ENVIRONMENT=.venv-pyperf-3.12 uv run --python 3.12 --with pyperformance \
-    pyperformance run -o results/pyperf-3.12.json
+uvx --python 3.12 --from pyperformance pyperformance run -o results/pyperf-3.12.json
 ```
 
 Text-only comparison (no plot):
 
 ```bash
-uv run --with pyperformance pyperformance compare \
+uvx --from pyperformance pyperformance compare \
     results/pyperf-3.11.json results/pyperf-3.13.json
 ```
 
