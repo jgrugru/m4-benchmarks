@@ -1,14 +1,23 @@
 # m4-benchmarks
 
-Python CPU benchmarks for Apple M4. Runs against Python 3.11, 3.12, 3.13 via `uv`.
+Python CPU benchmarks for Apple M4. Runs against Python 3.11, 3.12, 3.13, 3.14, and 3.14t (free-threaded / no-GIL) via `uv`.
 
 ## Setup
 
 ```bash
-uv python install 3.11 3.12 3.13
+uv python install 3.11 3.12 3.13 3.14 3.14t
 ```
 
-`uv run` creates per-version venvs on demand. Deps from `pyproject.toml` (numpy, pandas, matplotlib) installed automatically.
+Create individual .venvs for each environment
+```bash
+uv venv .venv-3.11 --python 3.11
+uv venv .venv-3.12 --python 3.12
+uv venv .venv-3.13 --python 3.13
+uv venv .venv-3.14 --python 3.14
+uv venv .venv-3.14t --python 3.14t
+```
+
+`3.14t` = free-threaded build (PEP 703). GIL disabled by default; scripts export `PYTHON_GIL=0` only for `*t` versions to keep C extensions from re-enabling it.
 
 ## Run all benchmarks
 
@@ -16,7 +25,14 @@ uv python install 3.11 3.12 3.13
 ./run_all.sh
 ```
 
-Loops 3 versions × 8 benchmarks. Appends rows to `results/results.csv`. Auto-plots at end.
+Loops 5 versions × 8 benchmarks. Appends rows to `results/results.csv`. Auto-plots at end.
+
+If a prior shell exported `PYTHON_GIL=0` globally, non-`t` Pythons crash with `Disabling the GIL is not supported by this build`. Clear it before running:
+
+```bash
+unset PYTHON_GIL
+./run_all.sh
+```
 
 ## Plot only (no re-run)
 
@@ -78,9 +94,11 @@ Run + plot:
 ```
 
 Slow — pyperformance runs ~60 benchmarks per version. Outputs:
-- `results/pyperf-3.11.json`, `pyperf-3.12.json`, `pyperf-3.13.json`
+- `results/pyperf-3.11.json`, `pyperf-3.12.json`, `pyperf-3.13.json`, `pyperf-3.14.json`, `pyperf-3.14t.json`
 - `results/plots/pyperf/<benchmark>.png` + `_heatmap.png`
 - text comparison printed at end
+
+Some pyperformance benches may skip on `3.14t` if a C extension lacks a free-threaded wheel.
 
 Plot only (after JSONs exist):
 

@@ -79,7 +79,8 @@ def offset_momentum(ref, bodies):
 def run() -> None:
     # Deep-copy fresh state each call
     bodies = [
-        (list(r), list(v), m) for r, v, m in (
+        (list(r), list(v), m)
+        for r, v, m in (
             BODIES["sun"],
             BODIES["jupiter"],
             BODIES["saturn"],
@@ -87,7 +88,11 @@ def run() -> None:
             BODIES["neptune"],
         )
     ]
-    pairs = [(bodies[i], bodies[j]) for i in range(len(bodies)) for j in range(i + 1, len(bodies))]
+    pairs = [
+        (bodies[i], bodies[j])
+        for i in range(len(bodies))
+        for j in range(i + 1, len(bodies))
+    ]
     offset_momentum(bodies[0], bodies)
     for _ in range(N_STEPS):
         advance(0.01, bodies, pairs)

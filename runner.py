@@ -29,7 +29,9 @@ HEADER = [
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("benchmark", help="Module name under benchmarks/ (e.g. mandelbrot)")
+    parser.add_argument(
+        "benchmark", help="Module name under benchmarks/ (e.g. mandelbrot)"
+    )
     parser.add_argument("-n", "--iterations", type=int, default=5)
     parser.add_argument("--notes", default="")
     args = parser.parse_args()

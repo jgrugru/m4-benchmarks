@@ -9,7 +9,7 @@ DATA_SIZE = 4096
 
 
 def _hash_loop(seed: int) -> int:
-    data = (seed.to_bytes(8, "little") + b"\x00" * (DATA_SIZE - 8))
+    data = seed.to_bytes(8, "little") + b"\x00" * (DATA_SIZE - 8)
     h = hashlib.sha256(data).digest()
     for _ in range(WORK_PER_PROC):
         h = hashlib.sha256(h).digest()
